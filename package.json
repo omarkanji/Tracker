@@ -1,0 +1,28 @@
+{
+  "name": "daily-tracker-2026",
+  "version": "1.0.0",
+  "description": "Daily goal tracker with WhatsApp integration and visualization dashboard",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js",
+    "migrate": "node server/migrate.js",
+    "client": "cd client && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run client\"",
+    "build": "cd client && npm install && npm run build",
+    "deploy": "npm run migrate && npm run start"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "node-cron": "^3.0.3",
+    "twilio": "^4.19.0",
+    "date-fns": "^3.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
