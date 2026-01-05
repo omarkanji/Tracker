@@ -102,8 +102,7 @@ router.post('/submit', async (req, res) => {
        WHERE entry_date <= $1
        AND (bed_before_11pm OR eight_hours_sleep OR wake_by_730am OR
             workout OR play_with_ai OR read_investing OR read_finance OR
-            read_crypto OR posted_twitter OR posted_linkedin OR reading_books)
-       ORDER BY entry_date DESC`,
+            read_crypto OR posted_twitter OR posted_linkedin OR reading_books)`,
       [dateToUse]
     );
 
