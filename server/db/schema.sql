@@ -38,6 +38,7 @@ END;
 $$ language 'plpgsql';
 
 -- Create trigger to automatically update updated_at
+DROP TRIGGER IF EXISTS update_daily_entries_updated_at ON daily_entries;
 CREATE TRIGGER update_daily_entries_updated_at
   BEFORE UPDATE ON daily_entries
   FOR EACH ROW
