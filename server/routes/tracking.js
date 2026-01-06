@@ -26,13 +26,15 @@ router.get('/today', async (req, res) => {
         eight_hours_sleep: false,
         wake_by_730am: false,
         workout: false,
-        play_with_ai: false,
+        ten_k_steps: false,
         read_investing: false,
         read_finance: false,
         read_crypto: false,
+        play_with_ai: false,
+        reading_books: false,
         posted_twitter: false,
         posted_linkedin: false,
-        reading_books: false
+        person_reached_out: ''
       });
     }
 
@@ -55,13 +57,15 @@ router.post('/submit', async (req, res) => {
       eight_hours_sleep,
       wake_by_730am,
       workout,
-      play_with_ai,
+      ten_k_steps,
       read_investing,
       read_finance,
       read_crypto,
+      play_with_ai,
+      reading_books,
       posted_twitter,
       posted_linkedin,
-      reading_books
+      person_reached_out
     } = req.body;
 
     const dateToUse = entry_date || format(new Date(), 'yyyy-MM-dd');
@@ -70,28 +74,30 @@ router.post('/submit', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO daily_entries (
         entry_date, bed_before_11pm, eight_hours_sleep, wake_by_730am,
-        workout, play_with_ai, read_investing, read_finance, read_crypto,
-        posted_twitter, posted_linkedin, reading_books
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        workout, ten_k_steps, read_investing, read_finance, read_crypto, play_with_ai,
+        reading_books, posted_twitter, posted_linkedin, person_reached_out
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       ON CONFLICT (entry_date)
       DO UPDATE SET
         bed_before_11pm = EXCLUDED.bed_before_11pm,
         eight_hours_sleep = EXCLUDED.eight_hours_sleep,
         wake_by_730am = EXCLUDED.wake_by_730am,
         workout = EXCLUDED.workout,
-        play_with_ai = EXCLUDED.play_with_ai,
+        ten_k_steps = EXCLUDED.ten_k_steps,
         read_investing = EXCLUDED.read_investing,
         read_finance = EXCLUDED.read_finance,
         read_crypto = EXCLUDED.read_crypto,
+        play_with_ai = EXCLUDED.play_with_ai,
+        reading_books = EXCLUDED.reading_books,
         posted_twitter = EXCLUDED.posted_twitter,
         posted_linkedin = EXCLUDED.posted_linkedin,
-        reading_books = EXCLUDED.reading_books,
+        person_reached_out = EXCLUDED.person_reached_out,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *`,
       [
         dateToUse, bed_before_11pm, eight_hours_sleep, wake_by_730am,
-        workout, play_with_ai, read_investing, read_finance, read_crypto,
-        posted_twitter, posted_linkedin, reading_books
+        workout, ten_k_steps, read_investing, read_finance, read_crypto, play_with_ai,
+        reading_books, posted_twitter, posted_linkedin, person_reached_out
       ]
     );
 
@@ -101,8 +107,9 @@ router.post('/submit', async (req, res) => {
        FROM daily_entries
        WHERE entry_date <= $1
        AND (bed_before_11pm OR eight_hours_sleep OR wake_by_730am OR
-            workout OR play_with_ai OR read_investing OR read_finance OR
-            read_crypto OR posted_twitter OR posted_linkedin OR reading_books)`,
+            workout OR ten_k_steps OR play_with_ai OR read_investing OR read_finance OR
+            read_crypto OR posted_twitter OR posted_linkedin OR reading_books OR
+            (person_reached_out IS NOT NULL AND person_reached_out != ''))`,
       [dateToUse]
     );
 

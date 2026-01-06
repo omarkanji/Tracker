@@ -5,20 +5,30 @@ CREATE TABLE IF NOT EXISTS daily_entries (
   id SERIAL PRIMARY KEY,
   entry_date DATE NOT NULL UNIQUE,
 
-  -- Sleep tracking
+  -- Sleep Goals
   bed_before_11pm BOOLEAN DEFAULT FALSE,
   eight_hours_sleep BOOLEAN DEFAULT FALSE,
   wake_by_730am BOOLEAN DEFAULT FALSE,
 
-  -- Daily activities
+  -- Daily Health Goals
   workout BOOLEAN DEFAULT FALSE,
-  play_with_ai BOOLEAN DEFAULT FALSE,
+  ten_k_steps BOOLEAN DEFAULT FALSE,
+
+  -- Daily Learning Items
   read_investing BOOLEAN DEFAULT FALSE,
   read_finance BOOLEAN DEFAULT FALSE,
   read_crypto BOOLEAN DEFAULT FALSE,
+  play_with_ai BOOLEAN DEFAULT FALSE,
+
+  -- General Reading
+  reading_books BOOLEAN DEFAULT FALSE,
+
+  -- Social Media
   posted_twitter BOOLEAN DEFAULT FALSE,
   posted_linkedin BOOLEAN DEFAULT FALSE,
-  reading_books BOOLEAN DEFAULT FALSE,
+
+  -- Stretch Goal
+  person_reached_out TEXT,
 
   -- Metadata
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -53,27 +63,31 @@ WITH all_goals AS (
     eight_hours_sleep,
     wake_by_730am,
     workout,
-    play_with_ai,
+    ten_k_steps,
     read_investing,
     read_finance,
     read_crypto,
+    play_with_ai,
+    reading_books,
     posted_twitter,
     posted_linkedin,
-    reading_books,
-    -- Calculate if all daily activities completed
-    (play_with_ai AND read_investing AND read_finance AND read_crypto) as four_daily_complete,
-    -- Calculate total activities completed
+    person_reached_out,
+    -- Calculate if all daily learning items completed
+    (play_with_ai AND read_investing AND read_finance AND read_crypto) as daily_learning_complete,
+    -- Calculate total activities completed (excluding text field)
     (CASE WHEN bed_before_11pm THEN 1 ELSE 0 END +
      CASE WHEN eight_hours_sleep THEN 1 ELSE 0 END +
      CASE WHEN wake_by_730am THEN 1 ELSE 0 END +
      CASE WHEN workout THEN 1 ELSE 0 END +
+     CASE WHEN ten_k_steps THEN 1 ELSE 0 END +
      CASE WHEN play_with_ai THEN 1 ELSE 0 END +
      CASE WHEN read_investing THEN 1 ELSE 0 END +
      CASE WHEN read_finance THEN 1 ELSE 0 END +
      CASE WHEN read_crypto THEN 1 ELSE 0 END +
      CASE WHEN posted_twitter THEN 1 ELSE 0 END +
      CASE WHEN posted_linkedin THEN 1 ELSE 0 END +
-     CASE WHEN reading_books THEN 1 ELSE 0 END) as total_completed
+     CASE WHEN reading_books THEN 1 ELSE 0 END +
+     CASE WHEN person_reached_out IS NOT NULL AND person_reached_out != '' THEN 1 ELSE 0 END) as total_completed
   FROM daily_entries
   ORDER BY entry_date DESC
 )
