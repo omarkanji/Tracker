@@ -1,6 +1,9 @@
 -- Migration to add new columns to existing daily_entries table
 -- This should only run once on existing databases
 
+-- Drop the view first so we can modify the table
+DROP VIEW IF EXISTS daily_streaks;
+
 -- Add new health goal column if it doesn't exist
 DO $$
 BEGIN
