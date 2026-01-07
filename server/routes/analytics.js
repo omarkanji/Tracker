@@ -20,6 +20,7 @@ router.get('/overview', async (req, res) => {
         SUM(CASE WHEN eight_hours_sleep THEN 1 ELSE 0 END) as eight_hours_sleep_count,
         SUM(CASE WHEN wake_by_730am THEN 1 ELSE 0 END) as wake_by_730am_count,
         SUM(CASE WHEN workout THEN 1 ELSE 0 END) as workout_count,
+        SUM(CASE WHEN ten_k_steps THEN 1 ELSE 0 END) as ten_k_steps_count,
         SUM(CASE WHEN play_with_ai THEN 1 ELSE 0 END) as play_with_ai_count,
         SUM(CASE WHEN read_investing THEN 1 ELSE 0 END) as read_investing_count,
         SUM(CASE WHEN read_finance THEN 1 ELSE 0 END) as read_finance_count,
@@ -27,6 +28,7 @@ router.get('/overview', async (req, res) => {
         SUM(CASE WHEN posted_twitter THEN 1 ELSE 0 END) as posted_twitter_count,
         SUM(CASE WHEN posted_linkedin THEN 1 ELSE 0 END) as posted_linkedin_count,
         SUM(CASE WHEN reading_books THEN 1 ELSE 0 END) as reading_books_count,
+        SUM(CASE WHEN person_reached_out IS NOT NULL AND person_reached_out != '' THEN 1 ELSE 0 END) as person_reached_out_count,
         SUM(CASE WHEN (play_with_ai AND read_investing AND read_finance AND read_crypto) THEN 1 ELSE 0 END) as four_daily_complete_count
        FROM daily_entries
        WHERE entry_date >= $1`,
@@ -59,6 +61,10 @@ router.get('/overview', async (req, res) => {
           count: parseInt(stats.workout_count),
           percentage: Math.round((stats.workout_count / totalDays) * 100)
         },
+        ten_k_steps: {
+          count: parseInt(stats.ten_k_steps_count),
+          percentage: Math.round((stats.ten_k_steps_count / totalDays) * 100)
+        },
         play_with_ai: {
           count: parseInt(stats.play_with_ai_count),
           percentage: Math.round((stats.play_with_ai_count / totalDays) * 100)
@@ -86,6 +92,10 @@ router.get('/overview', async (req, res) => {
         reading_books: {
           count: parseInt(stats.reading_books_count),
           percentage: Math.round((stats.reading_books_count / totalDays) * 100)
+        },
+        person_reached_out: {
+          count: parseInt(stats.person_reached_out_count),
+          percentage: Math.round((stats.person_reached_out_count / totalDays) * 100)
         }
       },
       four_daily_complete: {
@@ -132,6 +142,7 @@ router.get('/streaks', async (req, res) => {
       eight_hours_sleep: calculateStreak('eight_hours_sleep'),
       wake_by_730am: calculateStreak('wake_by_730am'),
       workout: calculateStreak('workout'),
+      ten_k_steps: calculateStreak('ten_k_steps'),
       play_with_ai: calculateStreak('play_with_ai'),
       read_investing: calculateStreak('read_investing'),
       read_finance: calculateStreak('read_finance'),
@@ -145,11 +156,12 @@ router.get('/streaks', async (req, res) => {
     let perfectDayStreak = 0;
     for (const entry of entries) {
       const allComplete = entry.bed_before_11pm && entry.eight_hours_sleep &&
-                          entry.wake_by_730am && entry.workout &&
+                          entry.wake_by_730am && entry.workout && entry.ten_k_steps &&
                           entry.play_with_ai && entry.read_investing &&
                           entry.read_finance && entry.read_crypto &&
                           entry.posted_twitter && entry.posted_linkedin &&
-                          entry.reading_books;
+                          entry.reading_books &&
+                          (entry.person_reached_out && entry.person_reached_out.trim() !== '');
       if (allComplete) {
         perfectDayStreak++;
       } else {
@@ -181,13 +193,15 @@ router.get('/heatmap', async (req, res) => {
          CASE WHEN eight_hours_sleep THEN 1 ELSE 0 END +
          CASE WHEN wake_by_730am THEN 1 ELSE 0 END +
          CASE WHEN workout THEN 1 ELSE 0 END +
+         CASE WHEN ten_k_steps THEN 1 ELSE 0 END +
          CASE WHEN play_with_ai THEN 1 ELSE 0 END +
          CASE WHEN read_investing THEN 1 ELSE 0 END +
          CASE WHEN read_finance THEN 1 ELSE 0 END +
          CASE WHEN read_crypto THEN 1 ELSE 0 END +
          CASE WHEN posted_twitter THEN 1 ELSE 0 END +
          CASE WHEN posted_linkedin THEN 1 ELSE 0 END +
-         CASE WHEN reading_books THEN 1 ELSE 0 END) as activities_completed
+         CASE WHEN reading_books THEN 1 ELSE 0 END +
+         CASE WHEN person_reached_out IS NOT NULL AND person_reached_out != '' THEN 1 ELSE 0 END) as activities_completed
        FROM daily_entries
        WHERE EXTRACT(YEAR FROM entry_date) = $1
        ORDER BY entry_date`,

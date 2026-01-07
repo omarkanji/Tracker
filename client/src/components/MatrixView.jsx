@@ -1,21 +1,39 @@
-import { format, subDays } from 'date-fns'
+import { format, parseISO, differenceInDays } from 'date-fns'
 import './MatrixView.css'
 
 function MatrixView({ history, days = 30 }) {
-  // Get the last N days of history
-  const recentHistory = history.slice(0, days)
-
-  // Create array of dates for the last N days
-  const dates = Array.from({ length: days }, (_, i) => {
-    const date = subDays(new Date(), i)
-    return format(date, 'yyyy-MM-dd')
-  }).reverse()
+  if (!history || history.length === 0) {
+    return (
+      <div className="matrix-view">
+        <p className="empty-message">No data available yet. Start tracking today!</p>
+      </div>
+    )
+  }
 
   // Map history by date
   const historyMap = {}
-  recentHistory.forEach(entry => {
+  history.forEach(entry => {
     historyMap[entry.entry_date] = entry
   })
+
+  // Find the earliest entry date
+  const allDates = history.map(entry => entry.entry_date).sort()
+  const firstEntryDate = parseISO(allDates[0])
+  const today = new Date()
+
+  // Calculate days between first entry and today
+  const daysSinceFirst = differenceInDays(today, firstEntryDate) + 1
+
+  // Use the smaller of daysSinceFirst or requested days
+  const daysToShow = Math.min(daysSinceFirst, days)
+
+  // Create array of dates from first entry to today (or up to days limit)
+  const dates = []
+  for (let i = daysToShow - 1; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    dates.push(format(date, 'yyyy-MM-dd'))
+  }
 
   const goals = [
     { key: 'bed_before_11pm', label: 'Bed <11pm' },

@@ -2,6 +2,13 @@
   width: 100%;
 }
 
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
 .matrix-scroll {
   overflow-x: auto;
   overflow-y: visible;

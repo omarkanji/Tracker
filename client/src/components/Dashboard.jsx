@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import {
   Chart as ChartJS,
@@ -30,6 +31,7 @@ ChartJS.register(
 )
 
 function Dashboard() {
+  const location = useLocation()
   const [loading, setLoading] = useState(true)
   const [overview, setOverview] = useState(null)
   const [completionOverview, setCompletionOverview] = useState(null)
@@ -40,7 +42,7 @@ function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData()
-  }, [timeRange, completionTimeRange])
+  }, [timeRange, completionTimeRange, location])
 
   const fetchDashboardData = async () => {
     try {
