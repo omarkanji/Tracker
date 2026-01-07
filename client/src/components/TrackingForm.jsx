@@ -4,6 +4,7 @@ import axios from 'axios'
 import './TrackingForm.css'
 
 function TrackingForm() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState(null)
@@ -13,13 +14,15 @@ function TrackingForm() {
     eight_hours_sleep: false,
     wake_by_730am: false,
     workout: false,
+    ten_k_steps: false,
     play_with_ai: false,
     read_investing: false,
     read_finance: false,
     read_crypto: false,
     posted_twitter: false,
     posted_linkedin: false,
-    reading_books: false
+    reading_books: false,
+    person_reached_out: ''
   })
 
   useEffect(() => {
@@ -38,10 +41,10 @@ function TrackingForm() {
   }
 
   const handleChange = (e) => {
-    const { name, checked } = e.target
+    const { name, type, checked, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: checked
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
@@ -54,10 +57,8 @@ function TrackingForm() {
       const response = await axios.post('/api/tracking/submit', formData)
 
       if (response.data.success) {
-        setMessage({
-          type: 'success',
-          text: `Saved! Current streak: ${response.data.streak_days} days`
-        })
+        // Redirect to dashboard after successful submission
+        navigate('/dashboard')
       }
     } catch (error) {
       console.error('Error submitting entry:', error)
@@ -65,7 +66,6 @@ function TrackingForm() {
         type: 'error',
         text: 'Failed to save entry. Please try again.'
       })
-    } finally {
       setSubmitting(false)
     }
   }
@@ -74,8 +74,14 @@ function TrackingForm() {
     return <div className="loading">Loading...</div>
   }
 
-  const completedCount = Object.values(formData).filter(Boolean).length
-  const totalItems = 11
+  // Count completed items (12 checkboxes + 1 text field if not empty)
+  const checkboxValues = Object.entries(formData)
+    .filter(([key]) => key !== 'person_reached_out')
+    .map(([, value]) => value)
+  const checkboxCount = checkboxValues.filter(Boolean).length
+  const textFieldCount = formData.person_reached_out && formData.person_reached_out.trim() !== '' ? 1 : 0
+  const completedCount = checkboxCount + textFieldCount
+  const totalItems = 13
 
   return (
     <div className="tracking-form">
@@ -131,7 +137,7 @@ function TrackingForm() {
           </section>
 
           <section>
-            <h3>Daily Activities</h3>
+            <h3>Daily Health Goals</h3>
             <div className="checkbox-group">
               <input
                 type="checkbox"
@@ -146,14 +152,17 @@ function TrackingForm() {
             <div className="checkbox-group">
               <input
                 type="checkbox"
-                id="play_with_ai"
-                name="play_with_ai"
-                checked={formData.play_with_ai}
+                id="ten_k_steps"
+                name="ten_k_steps"
+                checked={formData.ten_k_steps}
                 onChange={handleChange}
               />
-              <label htmlFor="play_with_ai">Play with AI</label>
+              <label htmlFor="ten_k_steps">10,000 steps</label>
             </div>
+          </section>
 
+          <section>
+            <h3>Daily Learning Items</h3>
             <div className="checkbox-group">
               <input
                 type="checkbox"
@@ -190,6 +199,34 @@ function TrackingForm() {
             <div className="checkbox-group">
               <input
                 type="checkbox"
+                id="play_with_ai"
+                name="play_with_ai"
+                checked={formData.play_with_ai}
+                onChange={handleChange}
+              />
+              <label htmlFor="play_with_ai">Play with AI</label>
+            </div>
+          </section>
+
+          <section>
+            <h3>General Reading</h3>
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="reading_books"
+                name="reading_books"
+                checked={formData.reading_books}
+                onChange={handleChange}
+              />
+              <label htmlFor="reading_books">Reading/books</label>
+            </div>
+          </section>
+
+          <section>
+            <h3>Social Media</h3>
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
                 id="posted_twitter"
                 name="posted_twitter"
                 checked={formData.posted_twitter}
@@ -208,16 +245,20 @@ function TrackingForm() {
               />
               <label htmlFor="posted_linkedin">Posted on LinkedIn</label>
             </div>
+          </section>
 
-            <div className="checkbox-group">
+          <section>
+            <h3>Stretch Goal</h3>
+            <div className="text-input-group">
+              <label htmlFor="person_reached_out">Person I reached out to today:</label>
               <input
-                type="checkbox"
-                id="reading_books"
-                name="reading_books"
-                checked={formData.reading_books}
+                type="text"
+                id="person_reached_out"
+                name="person_reached_out"
+                value={formData.person_reached_out}
                 onChange={handleChange}
+                placeholder="Enter name..."
               />
-              <label htmlFor="reading_books">Reading/books</label>
             </div>
           </section>
 

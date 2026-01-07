@@ -51,6 +51,29 @@
   color: var(--accent-blue);
 }
 
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.chart-header h3 {
+  margin: 0;
+}
+
+.completion-toggle {
+  padding: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.completion-toggle button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+}
+
 .chart-wrapper {
   height: 300px;
   position: relative;

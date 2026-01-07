@@ -1,0 +1,130 @@
+.matrix-view {
+  width: 100%;
+}
+
+.matrix-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  margin-bottom: 1rem;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 600px;
+}
+
+.matrix-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  z-index: 10;
+}
+
+.goal-header {
+  text-align: left;
+  padding: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  border-bottom: 2px solid var(--bg-tertiary);
+  position: sticky;
+  left: 0;
+  background: var(--bg-secondary);
+  z-index: 11;
+  min-width: 120px;
+}
+
+.date-header {
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--bg-tertiary);
+  white-space: nowrap;
+}
+
+.goal-cell {
+  padding: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--bg-tertiary);
+  position: sticky;
+  left: 0;
+  background: var(--bg-secondary);
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.matrix-cell {
+  padding: 0.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--bg-tertiary);
+  background: var(--bg-secondary);
+}
+
+.cell-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+}
+
+.cell-indicator.completed {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+.cell-indicator.incomplete {
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.matrix-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.legend-item .cell-indicator {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 768px) {
+  .matrix-scroll {
+    border-radius: 8px;
+  }
+
+  .goal-header,
+  .goal-cell {
+    min-width: 100px;
+    font-size: 0.85rem;
+  }
+
+  .date-header {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .matrix-cell {
+    padding: 0.4rem 0.2rem;
+  }
+
+  .cell-indicator {
+    width: 16px;
+    height: 16px;
+  }
+}

@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import { Bar, Line, Doughnut } from 'react-chartjs-2'
 import HeatMap from './HeatMap'
+import MatrixView from './MatrixView'
 import './Dashboard.css'
 
 ChartJS.register(
@@ -31,23 +32,27 @@ ChartJS.register(
 function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [overview, setOverview] = useState(null)
+  const [completionOverview, setCompletionOverview] = useState(null)
   const [streaks, setStreaks] = useState(null)
   const [history, setHistory] = useState([])
   const [timeRange, setTimeRange] = useState(30)
+  const [completionTimeRange, setCompletionTimeRange] = useState(30)
 
   useEffect(() => {
     fetchDashboardData()
-  }, [timeRange])
+  }, [timeRange, completionTimeRange])
 
   const fetchDashboardData = async () => {
     try {
-      const [overviewRes, streaksRes, historyRes] = await Promise.all([
+      const [overviewRes, completionOverviewRes, streaksRes, historyRes] = await Promise.all([
         axios.get(`/api/analytics/overview?days=${timeRange}`),
+        axios.get(`/api/analytics/overview?days=${completionTimeRange}`),
         axios.get('/api/analytics/streaks'),
         axios.get(`/api/tracking/history?days=${timeRange}`)
       ])
 
       setOverview(overviewRes.data)
+      setCompletionOverview(completionOverviewRes.data)
       setStreaks(streaksRes.data)
       setHistory(historyRes.data)
       setLoading(false)
@@ -61,40 +66,44 @@ function Dashboard() {
     return <div className="loading">Loading dashboard...</div>
   }
 
-  if (!overview || !streaks) {
+  if (!overview || !streaks || !completionOverview) {
     return <div className="loading">No data available yet. Start tracking!</div>
   }
 
-  // Prepare data for completion percentage chart
+  // Prepare data for completion percentage chart (uses completionTimeRange)
   const completionData = {
     labels: [
-      'Bed before 11pm',
+      'Bed <11pm',
       '8hrs sleep',
-      'Wake 7:30am',
+      'Wake 7:30',
       'Workout',
-      'AI',
+      '10k steps',
       'Investing',
       'Finance',
       'Crypto',
+      'AI',
+      'Books',
       'Twitter',
       'LinkedIn',
-      'Reading'
+      'Reach out'
     ],
     datasets: [
       {
         label: 'Completion %',
         data: [
-          overview.sleep_goals.bed_before_11pm.percentage,
-          overview.sleep_goals.eight_hours_sleep.percentage,
-          overview.sleep_goals.wake_by_730am.percentage,
-          overview.activities.workout.percentage,
-          overview.activities.play_with_ai.percentage,
-          overview.activities.read_investing.percentage,
-          overview.activities.read_finance.percentage,
-          overview.activities.read_crypto.percentage,
-          overview.activities.posted_twitter.percentage,
-          overview.activities.posted_linkedin.percentage,
-          overview.activities.reading_books.percentage
+          completionOverview.sleep_goals?.bed_before_11pm?.percentage || 0,
+          completionOverview.sleep_goals?.eight_hours_sleep?.percentage || 0,
+          completionOverview.sleep_goals?.wake_by_730am?.percentage || 0,
+          completionOverview.activities?.workout?.percentage || 0,
+          completionOverview.activities?.ten_k_steps?.percentage || 0,
+          completionOverview.activities?.read_investing?.percentage || 0,
+          completionOverview.activities?.read_finance?.percentage || 0,
+          completionOverview.activities?.read_crypto?.percentage || 0,
+          completionOverview.activities?.play_with_ai?.percentage || 0,
+          completionOverview.activities?.reading_books?.percentage || 0,
+          completionOverview.activities?.posted_twitter?.percentage || 0,
+          completionOverview.activities?.posted_linkedin?.percentage || 0,
+          completionOverview.activities?.person_reached_out?.percentage || 0
         ],
         backgroundColor: 'rgba(100, 181, 246, 0.6)',
         borderColor: 'rgba(100, 181, 246, 1)',
@@ -129,35 +138,41 @@ function Dashboard() {
     ]
   }
 
-  // Category breakdown (Sleep vs Learning vs Social)
+  // Category breakdown with new 6-category structure
   const categoryData = {
-    labels: ['Sleep Goals', 'Learning (4 Daily)', 'Social Media', 'Other'],
+    labels: ['Sleep Goals', 'Daily Health', 'Daily Learning', 'General Reading', 'Social Media', 'Stretch Goal'],
     datasets: [
       {
         data: [
-          overview.sleep_goals.bed_before_11pm.count +
-          overview.sleep_goals.eight_hours_sleep.count +
-          overview.sleep_goals.wake_by_730am.count,
-          overview.activities.play_with_ai.count +
-          overview.activities.read_investing.count +
-          overview.activities.read_finance.count +
-          overview.activities.read_crypto.count,
-          overview.activities.posted_twitter.count +
-          overview.activities.posted_linkedin.count,
-          overview.activities.workout.count +
-          overview.activities.reading_books.count
+          (overview.sleep_goals?.bed_before_11pm?.count || 0) +
+          (overview.sleep_goals?.eight_hours_sleep?.count || 0) +
+          (overview.sleep_goals?.wake_by_730am?.count || 0),
+          (overview.activities?.workout?.count || 0) +
+          (overview.activities?.ten_k_steps?.count || 0),
+          (overview.activities?.play_with_ai?.count || 0) +
+          (overview.activities?.read_investing?.count || 0) +
+          (overview.activities?.read_finance?.count || 0) +
+          (overview.activities?.read_crypto?.count || 0),
+          (overview.activities?.reading_books?.count || 0),
+          (overview.activities?.posted_twitter?.count || 0) +
+          (overview.activities?.posted_linkedin?.count || 0),
+          (overview.activities?.person_reached_out?.count || 0)
         ],
         backgroundColor: [
           'rgba(100, 181, 246, 0.6)',
+          'rgba(76, 175, 80, 0.6)',
           'rgba(171, 71, 188, 0.6)',
+          'rgba(255, 152, 0, 0.6)',
           'rgba(255, 202, 40, 0.6)',
-          'rgba(76, 175, 80, 0.6)'
+          'rgba(233, 30, 99, 0.6)'
         ],
         borderColor: [
           'rgba(100, 181, 246, 1)',
+          'rgba(76, 175, 80, 1)',
           'rgba(171, 71, 188, 1)',
+          'rgba(255, 152, 0, 1)',
           'rgba(255, 202, 40, 1)',
-          'rgba(76, 175, 80, 1)'
+          'rgba(233, 30, 99, 1)'
         ],
         borderWidth: 2
       }
@@ -195,6 +210,59 @@ function Dashboard() {
         labels: {
           color: '#a8b2d1'
         }
+      }
+    }
+  }
+
+  // Horizontal bar chart for current streaks
+  const streaksChartData = {
+    labels: [
+      'Bed <11pm',
+      '8hrs sleep',
+      'Wake 7:30',
+      'Workout',
+      '10k steps',
+      'AI',
+      'Twitter',
+      'LinkedIn'
+    ],
+    datasets: [
+      {
+        label: 'Days',
+        data: [
+          streaks.bed_before_11pm || 0,
+          streaks.eight_hours_sleep || 0,
+          streaks.wake_by_730am || 0,
+          streaks.workout || 0,
+          streaks.ten_k_steps || 0,
+          streaks.play_with_ai || 0,
+          streaks.posted_twitter || 0,
+          streaks.posted_linkedin || 0
+        ],
+        backgroundColor: 'rgba(76, 175, 80, 0.6)',
+        borderColor: 'rgba(76, 175, 80, 1)',
+        borderWidth: 2
+      }
+    ]
+  }
+
+  const horizontalBarOptions = {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#a8b2d1' },
+        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+      },
+      y: {
+        ticks: { color: '#a8b2d1' },
+        grid: { color: 'rgba(255, 255, 255, 0.1)' }
       }
     }
   }
@@ -252,16 +320,37 @@ function Dashboard() {
 
       <div className="charts-grid">
         <div className="card chart-container">
-          <h3>Completion Rates by Activity</h3>
+          <div className="chart-header">
+            <h3>Completion Rates by Activity</h3>
+            <div className="time-range-selector completion-toggle">
+              <button
+                className={completionTimeRange === 7 ? 'active' : ''}
+                onClick={() => setCompletionTimeRange(7)}
+              >
+                7d
+              </button>
+              <button
+                className={completionTimeRange === 30 ? 'active' : ''}
+                onClick={() => setCompletionTimeRange(30)}
+              >
+                30d
+              </button>
+              <button
+                className={completionTimeRange === 90 ? 'active' : ''}
+                onClick={() => setCompletionTimeRange(90)}
+              >
+                90d
+              </button>
+              <button
+                className={completionTimeRange === 365 ? 'active' : ''}
+                onClick={() => setCompletionTimeRange(365)}
+              >
+                1y
+              </button>
+            </div>
+          </div>
           <div className="chart-wrapper">
             <Bar data={completionData} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className="card chart-container">
-          <h3>Daily Progress Trend</h3>
-          <div className="chart-wrapper">
-            <Line data={trendData} options={chartOptions} />
           </div>
         </div>
 
@@ -272,39 +361,17 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card chart-container">
           <h3>Current Streaks</h3>
-          <div className="streaks-list">
-            <div className="streak-item">
-              <span>Bed before 11pm:</span>
-              <strong>{streaks.bed_before_11pm} days</strong>
-            </div>
-            <div className="streak-item">
-              <span>8 hours sleep:</span>
-              <strong>{streaks.eight_hours_sleep} days</strong>
-            </div>
-            <div className="streak-item">
-              <span>Wake by 7:30am:</span>
-              <strong>{streaks.wake_by_730am} days</strong>
-            </div>
-            <div className="streak-item">
-              <span>Workout:</span>
-              <strong>{streaks.workout} days</strong>
-            </div>
-            <div className="streak-item">
-              <span>Play with AI:</span>
-              <strong>{streaks.play_with_ai} days</strong>
-            </div>
-            <div className="streak-item">
-              <span>Twitter:</span>
-              <strong>{streaks.posted_twitter} days</strong>
-            </div>
-            <div className="streak-item">
-              <span>LinkedIn:</span>
-              <strong>{streaks.posted_linkedin} days</strong>
-            </div>
+          <div className="chart-wrapper">
+            <Bar data={streaksChartData} options={horizontalBarOptions} />
           </div>
         </div>
+      </div>
+
+      <div className="card">
+        <h3>Goals vs Dates Matrix</h3>
+        <MatrixView history={history} days={timeRange} />
       </div>
 
       <div className="card">

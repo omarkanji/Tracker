@@ -1,0 +1,229 @@
+.history {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.history-header {
+  margin-bottom: 2rem;
+}
+
+.history-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.history-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid var(--bg-tertiary);
+  transition: border-color 0.2s ease;
+}
+
+.history-card:hover {
+  border-color: var(--accent-blue);
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--bg-tertiary);
+}
+
+.history-card-header h3 {
+  font-size: 1.3rem;
+  color: var(--accent-blue);
+  margin: 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn, .save-btn, .cancel-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.edit-btn:hover {
+  background: rgba(100, 181, 246, 0.8);
+}
+
+.save-btn {
+  background: var(--accent-green);
+  color: white;
+}
+
+.save-btn:hover {
+  background: rgba(76, 175, 80, 0.8);
+}
+
+.cancel-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.cancel-btn:hover {
+  background: var(--bg-primary);
+}
+
+.editing-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.editing-form section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.editing-form h4 {
+  color: var(--accent-blue);
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.editing-form label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.editing-form label:hover {
+  background: var(--bg-tertiary);
+}
+
+.editing-form label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.editing-form label span {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.editing-form label.text-label {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.editing-form label.text-label input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  border: 2px solid var(--bg-tertiary);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.editing-form label.text-label input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.entry-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.summary-section h4 {
+  color: var(--accent-blue);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.summary-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.completed-item {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-tertiary);
+  color: var(--accent-green);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.message.success {
+  background: rgba(76, 175, 80, 0.2);
+  color: var(--accent-green);
+  border: 1px solid var(--accent-green);
+}
+
+.message.error {
+  background: rgba(239, 83, 80, 0.2);
+  color: var(--accent-red);
+  border: 1px solid var(--accent-red);
+}
+
+@media (max-width: 768px) {
+  .history-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .editing-form {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-summary {
+    grid-template-columns: 1fr;
+  }
+}

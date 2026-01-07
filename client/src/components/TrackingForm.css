@@ -49,6 +49,37 @@ section h3 {
   border-bottom: 2px solid var(--bg-tertiary);
 }
 
+.text-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.text-input-group label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.text-input-group input[type="text"] {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 2px solid var(--bg-tertiary);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.text-input-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.text-input-group input[type="text"]::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 .submit-btn {
   width: 100%;
   padding: 1rem;
