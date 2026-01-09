@@ -10,14 +10,23 @@ function MatrixView({ history, days = 30 }) {
     )
   }
 
-  // Map history by date
+  // Map history by date - normalize the date format
   const historyMap = {}
   history.forEach(entry => {
-    historyMap[entry.entry_date] = entry
+    // Normalize date to YYYY-MM-DD format
+    const dateStr = typeof entry.entry_date === 'string'
+      ? entry.entry_date.split('T')[0]
+      : format(new Date(entry.entry_date), 'yyyy-MM-dd')
+    historyMap[dateStr] = entry
   })
 
-  // Find the earliest entry date
-  const allDates = history.map(entry => entry.entry_date).sort()
+  // Find the earliest entry date - normalize dates first
+  const allDates = history.map(entry => {
+    const dateStr = typeof entry.entry_date === 'string'
+      ? entry.entry_date.split('T')[0]
+      : format(new Date(entry.entry_date), 'yyyy-MM-dd')
+    return dateStr
+  }).sort()
   const firstEntryDate = parseISO(allDates[0])
   const today = new Date()
 
