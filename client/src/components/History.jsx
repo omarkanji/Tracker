@@ -49,10 +49,9 @@ function History() {
           type: 'success',
           text: 'Entry updated successfully!'
         })
-        // Update the local history
-        setHistory(prev => prev.map(entry =>
-          entry.entry_date === editingEntry.entry_date ? editingEntry : entry
-        ))
+
+        // Refetch history to get the updated data
+        await fetchHistory()
         setEditingEntry(null)
 
         // Clear success message after 3 seconds

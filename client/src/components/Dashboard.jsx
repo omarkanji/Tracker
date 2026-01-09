@@ -41,8 +41,10 @@ function Dashboard() {
   const [completionTimeRange, setCompletionTimeRange] = useState(30)
 
   useEffect(() => {
+    // Always refetch when dependencies change
+    setLoading(true)
     fetchDashboardData()
-  }, [timeRange, completionTimeRange, location])
+  }, [timeRange, completionTimeRange, location.pathname])
 
   const fetchDashboardData = async () => {
     try {
