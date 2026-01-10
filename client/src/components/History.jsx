@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { format, parseISO, eachDayOfInterval } from 'date-fns'
@@ -15,29 +15,6 @@ function History() {
   useEffect(() => {
     fetchHistory()
   }, [])
-
-  useEffect(() => {
-    // Auto-edit if date parameter is present in URL
-    const dateParam = searchParams.get('date')
-    if (dateParam && history.length > 0) {
-      const entry = history.find(h => {
-        const entryDate = typeof h.entry_date === 'string'
-          ? h.entry_date.split('T')[0]
-          : format(new Date(h.entry_date), 'yyyy-MM-dd')
-        return entryDate === dateParam
-      })
-      if (entry) {
-        handleEdit(entry)
-        // Scroll to the entry
-        setTimeout(() => {
-          const ref = entryRefs.current[dateParam]
-          if (ref) {
-            ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          }
-        }, 100)
-      }
-    }
-  }, [searchParams, history])
 
   const fetchHistory = async () => {
     try {
@@ -124,9 +101,40 @@ function History() {
     }
   }
 
-  const handleEdit = (entry) => {
+  const handleEdit = useCallback((entry) => {
+    console.log('Editing entry with date:', entry.entry_date)
     setEditingEntry({ ...entry })
-  }
+  }, [])
+
+  // Auto-edit if date parameter is present in URL
+  useEffect(() => {
+    const dateParam = searchParams.get('date')
+    console.log('URL date param:', dateParam)
+    console.log('History length:', history.length)
+
+    if (dateParam && history.length > 0) {
+      const entry = history.find(h => {
+        const entryDate = typeof h.entry_date === 'string'
+          ? h.entry_date.split('T')[0]
+          : format(new Date(h.entry_date), 'yyyy-MM-dd')
+        console.log('Checking entry date:', entryDate, 'against', dateParam)
+        return entryDate === dateParam
+      })
+
+      console.log('Found entry:', entry)
+
+      if (entry) {
+        handleEdit(entry)
+        // Scroll to the entry
+        setTimeout(() => {
+          const ref = entryRefs.current[dateParam]
+          if (ref) {
+            ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 100)
+      }
+    }
+  }, [searchParams, history, handleEdit])
 
   const handleCancel = () => {
     setEditingEntry(null)
