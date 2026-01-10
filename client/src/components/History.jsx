@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { format } from 'date-fns'
+import { format, parseISO, eachDayOfInterval } from 'date-fns'
 import './History.css'
 
 function History() {
@@ -16,7 +16,65 @@ function History() {
   const fetchHistory = async () => {
     try {
       const response = await axios.get('/api/tracking/history?days=365')
-      setHistory(response.data)
+      const existingEntries = response.data
+
+      // If we have entries, fill in missing dates
+      if (existingEntries.length > 0) {
+        // Get all dates from first entry to today
+        const normalizedDates = existingEntries.map(entry => {
+          const dateStr = typeof entry.entry_date === 'string'
+            ? entry.entry_date.split('T')[0]
+            : format(new Date(entry.entry_date), 'yyyy-MM-dd')
+          return dateStr
+        }).sort()
+
+        const firstDate = parseISO(normalizedDates[0])
+        const today = new Date()
+
+        // Create a map of existing entries
+        const entryMap = {}
+        existingEntries.forEach(entry => {
+          const dateStr = typeof entry.entry_date === 'string'
+            ? entry.entry_date.split('T')[0]
+            : format(new Date(entry.entry_date), 'yyyy-MM-dd')
+          entryMap[dateStr] = entry
+        })
+
+        // Generate all dates from first entry to today
+        const allDates = eachDayOfInterval({ start: firstDate, end: today })
+          .map(date => format(date, 'yyyy-MM-dd'))
+
+        // Create complete history with empty entries for missing dates
+        const completeHistory = allDates.map(date => {
+          if (entryMap[date]) {
+            return entryMap[date]
+          } else {
+            // Create empty entry for missing date
+            return {
+              entry_date: date,
+              bed_before_11pm: false,
+              eight_hours_sleep: false,
+              wake_by_730am: false,
+              workout: false,
+              ten_k_steps: false,
+              read_investing: false,
+              read_finance: false,
+              read_crypto: false,
+              play_with_ai: false,
+              reading_books: false,
+              posted_twitter: false,
+              posted_linkedin: false,
+              person_reached_out: '',
+              is_placeholder: true // Mark as placeholder
+            }
+          }
+        }).reverse() // Show most recent first
+
+        setHistory(completeHistory)
+      } else {
+        setHistory(existingEntries)
+      }
+
       setLoading(false)
     } catch (error) {
       console.error('Error fetching history:', error)
@@ -85,9 +143,12 @@ function History() {
 
       <div className="history-list">
         {history.map(entry => (
-          <div key={entry.entry_date} className="history-card">
+          <div key={entry.entry_date} className={`history-card ${entry.is_placeholder ? 'missing-entry' : ''}`}>
             <div className="history-card-header">
-              <h3>{format(new Date(entry.entry_date), 'MMMM d, yyyy')}</h3>
+              <div className="header-title">
+                <h3>{format(new Date(entry.entry_date), 'MMMM d, yyyy')}</h3>
+                {entry.is_placeholder && <span className="missing-badge">Missing Entry</span>}
+              </div>
               {editingEntry?.entry_date === entry.entry_date ? (
                 <div className="button-group">
                   <button className="save-btn" onClick={handleSave}>
@@ -99,7 +160,7 @@ function History() {
                 </div>
               ) : (
                 <button className="edit-btn" onClick={() => handleEdit(entry)}>
-                  Edit
+                  {entry.is_placeholder ? 'Fill Entry' : 'Edit'}
                 </button>
               )}
             </div>
