@@ -71,14 +71,19 @@ function History() {
         const allDates = eachDayOfInterval({ start: firstDate, end: today })
           .map(date => format(date, 'yyyy-MM-dd'))
 
-        // Create complete history with empty entries for missing dates
+        // Create complete history - only add placeholders for dates that don't exist
         const todayStr = format(today, 'yyyy-MM-dd')
-        const completeHistory = allDates.map(date => {
+        const yesterdayStr = format(new Date(today.getTime() - 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
+
+        // Only generate dates up to yesterday (don't include today to avoid duplicates)
+        const datesToShow = allDates.filter(date => date <= yesterdayStr)
+
+        const completeHistory = datesToShow.map(date => {
           if (entryMap[date]) {
+            // Return existing entry
             return entryMap[date]
           } else {
-            // Create empty entry for missing date (but don't mark today as placeholder if it doesn't exist)
-            const isToday = date === todayStr
+            // Create placeholder for missing date
             return {
               entry_date: date,
               bed_before_11pm: false,
@@ -94,10 +99,18 @@ function History() {
               posted_twitter: false,
               posted_linkedin: false,
               person_reached_out: '',
-              is_placeholder: !isToday // Don't mark today as missing if it doesn't exist yet
+              is_placeholder: true
             }
           }
-        }).reverse() // Show most recent first
+        })
+
+        // Reverse to show most recent first
+        completeHistory.reverse()
+
+        // Add today's entry at the beginning if it exists (but don't create placeholder for it)
+        if (entryMap[todayStr]) {
+          completeHistory.unshift(entryMap[todayStr])
+        }
 
         setHistory(completeHistory)
       } else {
