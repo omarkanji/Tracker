@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { format, parseISO, eachDayOfInterval, isToday } from 'date-fns'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,6 +33,7 @@ ChartJS.register(
 
 function Dashboard() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [overview, setOverview] = useState(null)
   const [completionOverview, setCompletionOverview] = useState(null)
@@ -39,6 +41,8 @@ function Dashboard() {
   const [history, setHistory] = useState([])
   const [timeRange, setTimeRange] = useState(30)
   const [completionTimeRange, setCompletionTimeRange] = useState(30)
+  const [missingDates, setMissingDates] = useState([])
+  const [showMissingDatesModal, setShowMissingDatesModal] = useState(false)
 
   useEffect(() => {
     // Always refetch when dependencies change
@@ -59,10 +63,48 @@ function Dashboard() {
       setCompletionOverview(completionOverviewRes.data)
       setStreaks(streaksRes.data)
       setHistory(historyRes.data)
+
+      // Check for missing dates
+      checkMissingDates(historyRes.data)
+
       setLoading(false)
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       setLoading(false)
+    }
+  }
+
+  const checkMissingDates = (historyData) => {
+    if (!historyData || historyData.length === 0) return
+
+    // Get all dates from first entry to yesterday (don't include today since user might not have filled it yet)
+    const normalizedDates = historyData.map(entry => {
+      const dateStr = typeof entry.entry_date === 'string'
+        ? entry.entry_date.split('T')[0]
+        : format(new Date(entry.entry_date), 'yyyy-MM-dd')
+      return dateStr
+    }).sort()
+
+    const firstDate = parseISO(normalizedDates[0])
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    // Get all dates from first entry to yesterday
+    const allDates = eachDayOfInterval({ start: firstDate, end: yesterday })
+      .map(date => format(date, 'yyyy-MM-dd'))
+
+    // Create a Set of existing dates for fast lookup
+    const existingDates = new Set(normalizedDates)
+
+    // Find missing dates
+    const missing = allDates.filter(date => !existingDates.has(date))
+
+    setMissingDates(missing)
+
+    // Show modal if there are missing dates
+    if (missing.length > 0) {
+      setShowMissingDatesModal(true)
     }
   }
 
@@ -74,43 +116,37 @@ function Dashboard() {
     return <div className="loading">No data available yet. Start tracking!</div>
   }
 
-  // Prepare data for completion percentage chart (uses completionTimeRange)
+  // Prepare data for completion rates chart with color coding
+  const getCompletionColor = (percentage) => {
+    if (percentage >= 80) return { bg: 'rgba(76, 175, 80, 0.6)', border: 'rgba(76, 175, 80, 1)' } // Green
+    if (percentage >= 50) return { bg: 'rgba(255, 193, 7, 0.6)', border: 'rgba(255, 193, 7, 1)' } // Yellow
+    return { bg: 'rgba(244, 67, 54, 0.6)', border: 'rgba(244, 67, 54, 1)' } // Red
+  }
+
+  const completionActivities = [
+    { label: 'Bed <11pm', ...completionOverview.sleep_goals?.bed_before_11pm },
+    { label: '8hrs sleep', ...completionOverview.sleep_goals?.eight_hours_sleep },
+    { label: 'Wake 7:30', ...completionOverview.sleep_goals?.wake_by_730am },
+    { label: 'Workout', ...completionOverview.activities?.workout },
+    { label: '10k steps', ...completionOverview.activities?.ten_k_steps },
+    { label: 'Investing', ...completionOverview.activities?.read_investing },
+    { label: 'Finance', ...completionOverview.activities?.read_finance },
+    { label: 'Crypto', ...completionOverview.activities?.read_crypto },
+    { label: 'AI', ...completionOverview.activities?.play_with_ai },
+    { label: 'Books', ...completionOverview.activities?.reading_books },
+    { label: 'Twitter', ...completionOverview.activities?.posted_twitter },
+    { label: 'LinkedIn', ...completionOverview.activities?.posted_linkedin },
+    { label: 'Reach out', ...completionOverview.activities?.person_reached_out }
+  ]
+
   const completionData = {
-    labels: [
-      'Bed <11pm',
-      '8hrs sleep',
-      'Wake 7:30',
-      'Workout',
-      '10k steps',
-      'Investing',
-      'Finance',
-      'Crypto',
-      'AI',
-      'Books',
-      'Twitter',
-      'LinkedIn',
-      'Reach out'
-    ],
+    labels: completionActivities.map(a => a.label),
     datasets: [
       {
         label: 'Completion %',
-        data: [
-          completionOverview.sleep_goals?.bed_before_11pm?.percentage || 0,
-          completionOverview.sleep_goals?.eight_hours_sleep?.percentage || 0,
-          completionOverview.sleep_goals?.wake_by_730am?.percentage || 0,
-          completionOverview.activities?.workout?.percentage || 0,
-          completionOverview.activities?.ten_k_steps?.percentage || 0,
-          completionOverview.activities?.read_investing?.percentage || 0,
-          completionOverview.activities?.read_finance?.percentage || 0,
-          completionOverview.activities?.read_crypto?.percentage || 0,
-          completionOverview.activities?.play_with_ai?.percentage || 0,
-          completionOverview.activities?.reading_books?.percentage || 0,
-          completionOverview.activities?.posted_twitter?.percentage || 0,
-          completionOverview.activities?.posted_linkedin?.percentage || 0,
-          completionOverview.activities?.person_reached_out?.percentage || 0
-        ],
-        backgroundColor: 'rgba(100, 181, 246, 0.6)',
-        borderColor: 'rgba(100, 181, 246, 1)',
+        data: completionActivities.map(a => a.percentage || 0),
+        backgroundColor: completionActivities.map(a => getCompletionColor(a.percentage || 0).bg),
+        borderColor: completionActivities.map(a => getCompletionColor(a.percentage || 0).border),
         borderWidth: 2
       }
     ]
@@ -190,6 +226,17 @@ function Dashboard() {
       legend: {
         labels: {
           color: '#a8b2d1'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const activity = completionActivities[context.dataIndex]
+            const count = activity?.count || 0
+            const total = completionOverview.total_entries || 1
+            const percentage = activity?.percentage || 0
+            return `${count}/${total} days (${percentage}%)`
+          }
         }
       }
     },
@@ -382,6 +429,50 @@ function Dashboard() {
         <h3>Year Heat Map</h3>
         <HeatMap />
       </div>
+
+      {/* Missing Dates Modal */}
+      {showMissingDatesModal && missingDates.length > 0 && (
+        <div className="modal-overlay" onClick={() => setShowMissingDatesModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Missing Entries</h3>
+              <button className="modal-close" onClick={() => setShowMissingDatesModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>You have {missingDates.length} day{missingDates.length > 1 ? 's' : ''} without entries:</p>
+              <div className="missing-dates-list">
+                {missingDates.slice(0, 10).map(date => (
+                  <div key={date} className="missing-date-item">
+                    {format(parseISO(date), 'MMMM d, yyyy')}
+                  </div>
+                ))}
+                {missingDates.length > 10 && (
+                  <div className="missing-date-item">
+                    ... and {missingDates.length - 10} more
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="primary-btn"
+                onClick={() => {
+                  setShowMissingDatesModal(false)
+                  navigate('/history')
+                }}
+              >
+                Fill Missing Entries
+              </button>
+              <button
+                className="secondary-btn"
+                onClick={() => setShowMissingDatesModal(false)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
