@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { format, parseISO, eachDayOfInterval } from 'date-fns'
 import './History.css'
@@ -8,10 +9,35 @@ function History() {
   const [history, setHistory] = useState([])
   const [editingEntry, setEditingEntry] = useState(null)
   const [message, setMessage] = useState(null)
+  const [searchParams] = useSearchParams()
+  const entryRefs = useRef({})
 
   useEffect(() => {
     fetchHistory()
   }, [])
+
+  useEffect(() => {
+    // Auto-edit if date parameter is present in URL
+    const dateParam = searchParams.get('date')
+    if (dateParam && history.length > 0) {
+      const entry = history.find(h => {
+        const entryDate = typeof h.entry_date === 'string'
+          ? h.entry_date.split('T')[0]
+          : format(new Date(h.entry_date), 'yyyy-MM-dd')
+        return entryDate === dateParam
+      })
+      if (entry) {
+        handleEdit(entry)
+        // Scroll to the entry
+        setTimeout(() => {
+          const ref = entryRefs.current[dateParam]
+          if (ref) {
+            ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        }, 100)
+      }
+    }
+  }, [searchParams, history])
 
   const fetchHistory = async () => {
     try {
@@ -30,6 +56,7 @@ function History() {
 
         const firstDate = parseISO(normalizedDates[0])
         const today = new Date()
+        today.setHours(0, 0, 0, 0) // Normalize to start of day
 
         // Create a map of existing entries
         const entryMap = {}
@@ -45,11 +72,13 @@ function History() {
           .map(date => format(date, 'yyyy-MM-dd'))
 
         // Create complete history with empty entries for missing dates
+        const todayStr = format(today, 'yyyy-MM-dd')
         const completeHistory = allDates.map(date => {
           if (entryMap[date]) {
             return entryMap[date]
           } else {
-            // Create empty entry for missing date
+            // Create empty entry for missing date (but don't mark today as placeholder if it doesn't exist)
+            const isToday = date === todayStr
             return {
               entry_date: date,
               bed_before_11pm: false,
@@ -65,7 +94,7 @@ function History() {
               posted_twitter: false,
               posted_linkedin: false,
               person_reached_out: '',
-              is_placeholder: true // Mark as placeholder
+              is_placeholder: !isToday // Don't mark today as missing if it doesn't exist yet
             }
           }
         }).reverse() // Show most recent first
@@ -142,13 +171,22 @@ function History() {
       )}
 
       <div className="history-list">
-        {history.map(entry => (
-          <div key={entry.entry_date} className={`history-card ${entry.is_placeholder ? 'missing-entry' : ''}`}>
-            <div className="history-card-header">
-              <div className="header-title">
-                <h3>{format(new Date(entry.entry_date), 'MMMM d, yyyy')}</h3>
-                {entry.is_placeholder && <span className="missing-badge">Missing Entry</span>}
-              </div>
+        {history.map(entry => {
+          const entryDate = typeof entry.entry_date === 'string'
+            ? entry.entry_date.split('T')[0]
+            : format(new Date(entry.entry_date), 'yyyy-MM-dd')
+
+          return (
+            <div
+              key={entry.entry_date}
+              ref={(el) => (entryRefs.current[entryDate] = el)}
+              className={`history-card ${entry.is_placeholder ? 'missing-entry' : ''}`}
+            >
+              <div className="history-card-header">
+                <div className="header-title">
+                  <h3>{format(new Date(entry.entry_date), 'MMMM d, yyyy')}</h3>
+                  {entry.is_placeholder && <span className="missing-badge">Missing Entry</span>}
+                </div>
               {editingEntry?.entry_date === entry.entry_date ? (
                 <div className="button-group">
                   <button className="save-btn" onClick={handleSave}>
@@ -339,7 +377,8 @@ function History() {
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
 
         {history.length === 0 && (
           <div className="empty-state">

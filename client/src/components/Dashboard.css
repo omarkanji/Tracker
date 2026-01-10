@@ -205,6 +205,17 @@
   font-size: 0.95rem;
 }
 
+.missing-date-item.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.missing-date-item.clickable:hover {
+  background: var(--accent-blue);
+  color: white;
+  transform: translateX(5px);
+}
+
 .modal-footer {
   display: flex;
   gap: 0.75rem;

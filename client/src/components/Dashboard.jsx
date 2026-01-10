@@ -87,6 +87,7 @@ function Dashboard() {
 
     const firstDate = parseISO(normalizedDates[0])
     const today = new Date()
+    today.setHours(0, 0, 0, 0) // Normalize to start of day
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
 
@@ -442,7 +443,14 @@ function Dashboard() {
               <p>You have {missingDates.length} day{missingDates.length > 1 ? 's' : ''} without entries:</p>
               <div className="missing-dates-list">
                 {missingDates.slice(0, 10).map(date => (
-                  <div key={date} className="missing-date-item">
+                  <div
+                    key={date}
+                    className="missing-date-item clickable"
+                    onClick={() => {
+                      setShowMissingDatesModal(false)
+                      navigate(`/history?date=${date}`)
+                    }}
+                  >
                     {format(parseISO(date), 'MMMM d, yyyy')}
                   </div>
                 ))}
